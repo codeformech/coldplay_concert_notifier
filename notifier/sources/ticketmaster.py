@@ -47,11 +47,12 @@ def resolve_attraction_id(api_key: str, session: requests.Session) -> str | None
     return attractions[0].get("id") if attractions else None
 
 
-def _format_sales(sales: dict) -> tuple[str, str | None]:
-    """Render the sales windows into prose, and pull out the soonest deadline.
+def _format_sales(sales: dict) -> tuple[str, str | None, str | None]:
+    """Render the sales windows into prose, and pull out the key timestamps.
 
-    The presale registration window is usually the real deadline — weeks before
-    the public on-sale — so it gets surfaced first.
+    Returns (prose, soonest_deadline, public_on_sale). The presale registration
+    window is usually the real deadline — weeks before the public on-sale — so
+    it is what "soonest" tracks.
     """
     parts: list[str] = []
     soonest: str | None = None
@@ -71,7 +72,8 @@ def _format_sales(sales: dict) -> tuple[str, str | None]:
         if start and (soonest is None or start < soonest):
             soonest = start
 
-    return "; ".join(parts) if parts else "no sales dates published yet", soonest
+    prose = "; ".join(parts) if parts else "no sales dates published yet"
+    return prose, soonest, public_start
 
 
 def fetch(api_key: str, session: requests.Session | None = None) -> list[Candidate]:
@@ -128,7 +130,7 @@ def _to_candidate(event: dict, country: str) -> Candidate:
     country_name = (venue.get("country") or {}).get("name", country)
     where = ", ".join(x for x in (venue_name, city, country_name) if x)
 
-    sales_text, deadline = _format_sales(event.get("sales", {}))
+    sales_text, deadline, public_start = _format_sales(event.get("sales", {}))
 
     return Candidate(
         id=f"tm:{event_id}",
@@ -144,5 +146,6 @@ def _to_candidate(event: dict, country: str) -> Candidate:
             "country": country,
             "sales": sales_text,
             "deadline": deadline,
+            "public_start": public_start,
         },
     )

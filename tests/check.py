@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from notifier import config, state  # noqa: E402
 from notifier.judge import Verdict, judge, should_alert  # noqa: E402
-from notifier.notify import render  # noqa: E402
+from notifier.notify import render, to_kst  # noqa: E402
 from notifier.sources import Candidate  # noqa: E402
 from notifier.sources import news as ns  # noqa: E402
 from notifier.sources.ticketmaster import _to_candidate  # noqa: E402
@@ -153,6 +153,30 @@ check("ampersand escaped in text", "&amp; presale" in msg, True)
 check("ampersand escaped in href", "x=1&amp;y=2" in msg, True)
 check("deadline surfaced", "Act by:" in msg, True)
 check("Ticketmaster render includes venue", "Wembley Stadium" in render(tm, None), True)
+
+section("Seoul time conversion")
+check("UTC instant -> KST (+9)", to_kst("2026-09-08T08:00:00Z"), "Tue 08 Sep 17:00 KST (08:00 UTC)")
+check("explicit +00:00 offset handled", to_kst("2026-09-08T08:00:00+00:00"),
+      "Tue 08 Sep 17:00 KST (08:00 UTC)")
+check("non-UTC offset normalised", to_kst("2026-09-08T10:00:00+02:00"),
+      "Tue 08 Sep 17:00 KST (08:00 UTC)")
+check("crossing midnight rolls the date", to_kst("2026-09-08T20:00:00Z"),
+      "Wed 09 Sep 05:00 KST (20:00 UTC)")
+# Anything without a real instant must be passed through untouched — inventing
+# an on-sale time is worse than showing the raw value.
+check("bare date not converted", to_kst("2026-07-22"), None)
+check("prose not converted", to_kst("Friday 24 July at 09:00 BST"), None)
+check("naive datetime not converted", to_kst("2026-09-08T08:00:00"), None)
+check("empty string not converted", to_kst(""), None)
+check("non-string not converted", to_kst(None), None)
+
+tm_msg = render(tm, None)
+check("deadline shown in KST", "17:00 KST" in tm_msg, True)
+check("general sale line present", "General sale:" in tm_msg, True)
+unparseable = Verdict(id="n", is_real_announcement=True, market_relevant=True, confidence=0.9,
+                      headline="h", detail="d", action_deadline="Friday 24 July, 09:00 BST")
+check("unconvertible deadline passed through verbatim",
+      "Friday 24 July, 09:00 BST" in render(plain, unparseable), True)
 
 # --- judge guards ------------------------------------------------------------
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 import time
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -17,6 +18,32 @@ from .judge import Verdict
 from .sources import Candidate
 
 API = "https://api.telegram.org/bot{token}/sendMessage"
+
+
+# Korea has had no DST since 1988, so a fixed offset is exact and avoids
+# depending on the tzdata package being present on Windows.
+KST = timezone(timedelta(hours=9), "KST")
+
+
+def to_kst(value: str) -> str | None:
+    """Render an ISO-8601 instant as Seoul time, or None if it isn't one.
+
+    Ticketmaster gives sales windows as UTC (`2026-09-08T08:00:00Z`). Haiku's
+    action_deadline is free text and often just a date. Anything without a
+    timezone-aware time has nothing to convert, so it is left untouched rather
+    than guessed at — a wrong on-sale time is worse than an unconverted one.
+    """
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    local = parsed.astimezone(KST)
+    utc = parsed.astimezone(timezone.utc)
+    return f"{local:%a %d %b %H:%M} KST ({utc:%H:%M} UTC)"
 
 
 def _esc(text: str) -> str:
@@ -47,7 +74,9 @@ def render(candidate: Candidate, verdict: Verdict | None) -> str:
     elif candidate.extra.get("deadline"):
         deadline = candidate.extra["deadline"]
     if deadline:
-        lines += ["", f"⏰ <b>Act by:</b> {_esc(str(deadline))}"]
+        seoul = to_kst(str(deadline))
+        shown = seoul if seoul else str(deadline)
+        lines += ["", f"⏰ <b>Act by:</b> {_esc(shown)}"]
 
     if candidate.source == "ticketmaster":
         where = candidate.extra.get("where")
@@ -59,6 +88,10 @@ def render(candidate: Candidate, verdict: Verdict | None) -> str:
             lines.append(f"📍 {_esc(where)}")
         if sales:
             lines.append(f"🎫 {_esc(sales)}")
+        public_start = candidate.extra.get("public_start")
+        seoul_public = to_kst(str(public_start)) if public_start else None
+        if seoul_public:
+            lines.append(f"🕘 <b>General sale:</b> {_esc(seoul_public)}")
 
     if candidate.url:
         lines += ["", f'<a href="{_esc_attr(candidate.url)}">Open link</a>']
