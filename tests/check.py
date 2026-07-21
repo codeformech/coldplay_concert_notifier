@@ -9,7 +9,6 @@ subtly wrong, and the failure mode is silence rather than an error.
 
 from __future__ import annotations
 
-import calendar  # noqa: F401  (imported for parity with news.py's date handling)
 import sys
 import tempfile
 import time
