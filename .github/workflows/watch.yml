@@ -18,9 +18,11 @@ jobs:
   watch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # v5/v6 run on Node 24. The older v4/v5 pair still works but emits a
+      # deprecation warning and will eventually stop being forced onto Node 24.
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
