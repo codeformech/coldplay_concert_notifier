@@ -1,0 +1,42 @@
+[
+  {
+    "id": "fixture:wembley-tease",
+    "source": "news",
+    "title": "Coldplay tease huge 2027 leg of 'Music Of The Spheres' tour: \"138 more shows to go\"",
+    "url": "https://www.nme.com/news/music/coldplay-tease-huge-2027-leg-3891055",
+    "summary": "Publisher: nme.com. Chris Martin told the Wembley crowd in September 2025 that the band had '138 more shows to go' and would announce 2027 dates soon. No dates or venues were given.",
+    "published": "2025-09-08",
+    "priority": false,
+    "extra": {}
+  },
+  {
+    "id": "fixture:affiliate-spam",
+    "source": "news",
+    "title": "Coldplay Tour 2027: Dates, Venues, and Ticket Information | Official Site",
+    "url": "https://example-affiliate.invalid/coldplay-2027",
+    "summary": "Publisher: example-affiliate.invalid. Coldplay's 2027 tour exclusive ticket sales begin January 15, 2027, while the pre-sale for fan club members and credit card holders starts on March 1, 2027.",
+    "published": "2026-07-01",
+    "priority": false,
+    "extra": {}
+  },
+  {
+    "id": "fixture:unrelated",
+    "source": "news",
+    "title": "Chris Martin says Coldplay will stop making albums after 2027",
+    "url": "https://example-news.invalid/coldplay-albums",
+    "summary": "Publisher: example-news.invalid. In an interview the frontman discussed the band's recording plans. No touring or ticketing information was given.",
+    "published": "2026-06-20",
+    "priority": false,
+    "extra": {}
+  },
+  {
+    "id": "fixture:real-announcement",
+    "source": "news",
+    "title": "Coldplay announce 2027 UK and European stadium dates, tickets on sale Friday",
+    "url": "https://example-news.invalid/coldplay-2027-uk-dates",
+    "summary": "Publisher: bbc.co.uk. Coldplay have confirmed six Wembley Stadium shows in June 2027 plus dates in Paris, Berlin and Barcelona. General sale opens Friday 24 July at 09:00 BST via Ticketmaster; fan presale registration closes Wednesday 22 July.",
+    "published": "2026-07-20",
+    "priority": false,
+    "extra": {}
+  }
+]

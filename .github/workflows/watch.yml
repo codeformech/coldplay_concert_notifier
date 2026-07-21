@@ -1,0 +1,51 @@
+name: Watch for Coldplay 2027 tickets
+
+on:
+  schedule:
+    # Every 30 minutes, deliberately off the :00/:30 marks — GitHub's scheduler
+    # is congested on the hour and delays runs 5-30 minutes there.
+    - cron: "13,43 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coldplay-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Poll, screen, alert
+        env:
+          TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m notifier
+
+      # Runs even if the step above failed, so a partial run still records what
+      # it delivered and does not re-alert on the next pass.
+      - name: Persist state
+        if: always()
+        run: |
+          git config user.name  "coldplay-notifier[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- state.json; then
+            echo "state.json unchanged"
+          else
+            git add state.json
+            git commit -m "state: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi

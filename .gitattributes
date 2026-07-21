@@ -1,0 +1,3 @@
+# Keep LF in the repo. The workflow's `run:` block is executed by bash on
+# ubuntu-latest, and CRLF there produces `$'\r': command not found`.
+* text=auto eol=lf
