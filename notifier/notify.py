@@ -102,6 +102,39 @@ def send(text: str, token: str, chat_id: str, session: requests.Session | None =
     raise RuntimeError(f"Telegram send failed after 2 attempts: {last_error}")
 
 
+def discover_chat_ids(token: str, session: requests.Session | None = None) -> list[dict]:
+    """Read chat ids out of getUpdates.
+
+    Exists so the token never has to be pasted into a browser URL, where it
+    would land in history and sync across devices.
+    """
+    session = session or requests.Session()
+    response = session.get(
+        f"https://api.telegram.org/bot{token}/getUpdates",
+        timeout=config.HTTP_TIMEOUT,
+    )
+    if response.status_code == 401:
+        raise RuntimeError(
+            "Telegram rejected the token (401). If you just revoked and "
+            "regenerated it in BotFather, update TELEGRAM_BOT_TOKEN in .env."
+        )
+    if not response.ok:
+        raise RuntimeError(f"getUpdates returned {response.status_code}: {response.text[:200]}")
+
+    found: dict[str, dict] = {}
+    for update in response.json().get("result", []):
+        message = update.get("message") or update.get("channel_post") or {}
+        chat = message.get("chat") or {}
+        chat_id = chat.get("id")
+        if chat_id is None:
+            continue
+        name = " ".join(
+            x for x in (chat.get("first_name"), chat.get("last_name")) if x
+        ) or chat.get("title") or chat.get("username") or "(no name)"
+        found[str(chat_id)] = {"id": str(chat_id), "name": name, "type": chat.get("type", "?")}
+    return list(found.values())
+
+
 def send_test(token: str, chat_id: str) -> None:
     send(
         "✅ <b>Coldplay notifier is wired up.</b>\n\n"

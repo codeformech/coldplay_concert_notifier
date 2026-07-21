@@ -42,9 +42,21 @@ committed but `state.json`.
 **1. Telegram bot.** DM [@BotFather](https://t.me/BotFather) → `/newbot` → pick a
 name → copy the token.
 
-**2. Your chat id.** Send any message to your new bot, then open
-`https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and read
-`result[0].message.chat.id`.
+**2. Your chat id.** Put the token in `.env` (copy `.env.example`), open your
+bot, press **Start**, send it any message, then:
+
+```bash
+python -m notifier --get-chat-id
+```
+
+Telegram only reports a chat once the bot has received something from it, so the
+Start step is required. Use this rather than opening
+`api.telegram.org/bot<TOKEN>/getUpdates` in a browser — that puts your token in
+browser history, which often syncs across devices.
+
+> **If your token is ever exposed** — pasted in a screenshot, committed, shared —
+> rotate it: BotFather → `/revoke` → pick the bot. The old token dies
+> immediately and you get a new one. Update `.env` and the GitHub secret.
 
 **3. Ticketmaster key.** Register at
 [developer.ticketmaster.com](https://developer.ticketmaster.com/) — the Discovery

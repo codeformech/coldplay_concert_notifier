@@ -18,7 +18,7 @@ import requests
 
 from . import config, state
 from .judge import judge, should_alert
-from .notify import render, send, send_test
+from .notify import discover_chat_ids, render, send, send_test
 from .sources import Candidate
 from .sources import news as news_source
 from .sources import ticketmaster as tm_source
@@ -28,6 +28,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="notifier", description=__doc__)
     parser.add_argument("--dry-run", action="store_true",
                         help="print what would be sent; send nothing, write no state")
+    parser.add_argument("--get-chat-id", action="store_true",
+                        help="print the chat id(s) that have messaged your bot, and exit")
     parser.add_argument("--test-telegram", action="store_true",
                         help="send a single test message and exit")
     parser.add_argument("--reset-state", action="store_true",
@@ -73,6 +75,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.reset_state:
         state.reset()
         print(f"State cleared: {config.STATE_PATH}")
+        return 0
+
+    if args.get_chat_id:
+        chats = discover_chat_ids(config.require_env("TELEGRAM_BOT_TOKEN"))
+        if not chats:
+            print(
+                "No chats found yet.\n"
+                "Open https://t.me/Coldplay_notifier_bot, press Start, send it any\n"
+                "message, then run this again. Telegram only reports a chat once\n"
+                "the bot has received something from it."
+            )
+            return 1
+        print("Chats that have messaged your bot:\n")
+        for chat in chats:
+            print(f"  TELEGRAM_CHAT_ID={chat['id']}    {chat['name']} ({chat['type']})")
+        print("\nPut the matching id in .env as TELEGRAM_CHAT_ID.")
         return 0
 
     if args.test_telegram:
